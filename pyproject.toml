@@ -6,10 +6,16 @@ authors = [
     {name = "jieggii", email = "jieggii.contact@gmail.com"},
 ]
 dependencies = [
-    "aiogram>=2.20",
     "loguru>=0.6.0",
     "betterconf>=2.6.1",
     "python-dotenv[cli]>=0.20.0",
+    "beanie>=1.10.8",
+    "motor>=2.5.1",
+    "python-dateutil>=2.8.2",
+    "ujson>=5.2.0",
+    "uvloop>=0.16.0",
+    "aiohttp[speedups]>=3.8.1",
+    "aiogram>=2.20",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}
