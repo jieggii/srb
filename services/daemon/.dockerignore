@@ -1,0 +1,6 @@
+.dockerignore
+Dockerfile
+.pdm.toml
+pdm.lock
+pyproject.toml
+__pypackages__
