@@ -42,6 +42,7 @@ async def daemon() -> NoReturn:
                             f"Detected outdated sub ({sub}). Incremented its last_charge."
                         )
                         sub.last_charge = next_charge
+                        await user.save()
 
                     if not notified_today:
                         if days_left == 0:
@@ -70,10 +71,9 @@ async def daemon() -> NoReturn:
                             await send_notification(
                                 user, sub, f"will be charged <b>in a week</b>."
                             )
+                        await user.save()
 
-                await user.save()
-
-        await asyncio.sleep(3)
+        await asyncio.sleep(60*5)
 
 
 loop = asyncio.new_event_loop()
