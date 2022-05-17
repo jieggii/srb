@@ -1,36 +1,30 @@
 import asyncio
 import logging
-import multiprocessing
 from datetime import datetime
 
 import ujson
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
-from beanie import init_beanie
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
+from srblib.config import config
+from srblib.core import count_next_charge
+from srblib.db import init_db
+from srblib.db.models import Period, Sub, User
 
 from bot import cliche
-from bot.config import config
-from bot.core import get_next_charge
 from bot.fsm import NewSub
 from bot.inline_keyboards import generate_remove_sub_inline_keyboard
 from bot.keyboards import new_sub_last_charge_kbd, new_sub_select_period_kbd
 from bot.middlewares import DatabaseMiddleware
-from bot.models import Sub, User
-from bot.ui import raw_last_charge_date_to_datetime, raw_period_to_period
 
 logging.basicConfig(level=logging.ERROR)
-loop = asyncio.new_event_loop()  # todo: use uvloop
-client = AsyncIOMotorClient(f"mongodb://{config.Mongo.HOST}:{config.Mongo.PORT}")
-client.get_io_loop = asyncio.get_running_loop
-loop.run_until_complete(
-    init_beanie(database=client[config.Mongo.DB_NAME], document_models=[User])
-)
-storage = MemoryStorage()
+
+loop = asyncio.new_event_loop()
+init_db(loop)
+
 bot = Bot(token=config.TOKEN, loop=loop)
-dp = Dispatcher(bot, storage=storage)
+dp = Dispatcher(bot, storage=MemoryStorage())
 
 
 @dp.message_handler(state="*", commands="cancel")
@@ -84,18 +78,18 @@ async def state_new_sub_name(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=NewSub.period)
 async def state_new_sub_period(message: types.Message, state: FSMContext):
-    text = message.text
-    period = raw_period_to_period(text)
-    if period:
-        async with state.proxy() as data:
-            data["period"] = period
-        await message.reply(
-            'Now I need you to type amount for the given payment period (with currency), for example: "10 USD".',
-            reply_markup=types.ReplyKeyboardRemove(),
-        )
-        await NewSub.next()
-    else:
+    try:
+        period = Period(message.text.lower())
+    except ValueError:
         await message.reply("Wrong period. Please select it using keyboard.")
+        return
+    async with state.proxy() as data:
+        data["period"] = period
+    await message.reply(
+        'Now I need you to type amount for the given payment period (with currency), for example: "10 USD".',
+        reply_markup=types.ReplyKeyboardRemove(),
+    )
+    await NewSub.next()
 
 
 @dp.message_handler(state=NewSub.amount)
@@ -114,39 +108,40 @@ async def state_new_sub_amount(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=NewSub.last_charge)
 async def state_new_sub_last_charge(message: types.Message, state: FSMContext):
-    if message.text == "Today":
-        last_charge = datetime.today()
-    else:
-        last_charge = raw_last_charge_date_to_datetime(message.text)
-
-    if last_charge:
-        async with state.proxy() as data:
-            data["next_charge"] = get_next_charge(last_charge, data["period"])
-
-            logger.info(
-                f"Creating a new sub for @{message.from_user.username} ({message.from_user.id}): {data['name']} ({data['amount']} / {data['period']})"
-            )
-            sub = Sub(**data)
-            user = await User(user_id=message.from_user.id).find_one()
-            if user.subs:
-                user.subs.append(sub)
-            else:
-                user.subs = [sub]
-            await user.save()
-            await message.reply(
-                f"Done! Added a new subscription: <b>{data['name']}</b> ({data['amount']} / {data['period']}). "
-                f"Will be charged <b>{data['next_charge'].strftime('%d.%m.%Y')}</b>.\n\n"
-                f"I will notify you as the date approaches. Type /all to see all subscriptions.",
-                parse_mode="HTML",
-                reply_markup=types.ReplyKeyboardRemove(),
-            )
-            await state.finish()
-    else:
-        await message.reply(
-            "Wrong date. Please send the last charge date in <b>dd.mm.yyyy</b> format (04.05.2022 for example)"
-            "or press <b>Today</b> button.",
-            parse_mode="HTML",
+    match message.text:
+        case "Today":
+            last_charge = datetime.today()
+        case _:
+            try:
+                last_charge = datetime.strptime(message.text, "%d.%m.%Y")
+            except ValueError:
+                await message.reply(
+                    "Wrong date. Please send the last charge date in <b>dd.mm.yyyy</b> format (04.05.2022 for example)"
+                    "or press <b>Today</b> button.",
+                    parse_mode="HTML",
+                )
+                return
+    async with state.proxy() as data:
+        data["last_charge"] = last_charge
+        sub = Sub(**data)
+        user = await User(user_id=message.from_user.id).find_one()
+        if user.subs:
+            user.subs.append(sub)
+        else:
+            user.subs = [sub]
+        await user.save()
+        logger.info(
+            f"Created a new sub for {user}: {sub}."
         )
+        next_charge = count_next_charge(last_charge, data["period"])
+        await message.reply(
+            f"Done! Added a new subscription: <b>{data['name']}</b> ({data['amount']} / {data['period']}). "
+            f"Will be charged <b>{next_charge.strftime('%d.%m.%Y')}</b>.\n\n"
+            f"I will notify you as the date approaches. Type /all to see all subscriptions.",
+            parse_mode="HTML",
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
+        await state.finish()
 
 
 @dp.message_handler(commands="all")
@@ -156,9 +151,12 @@ async def handle_all(message: types.Message):
         await message.reply(cliche.YOU_DO_NOT_HAVE_ANY_SUBS)
         return
     response = "<b>Your subscriptions:</b>\n"
+    today = datetime.today()
     for sub in user.subs:
-        response += f"- <b>{sub.name}</b> ({sub.amount} / {sub.period}): {sub.next_charge.strftime('%d.%m.%Y')}\n"
-    response += "\nUse /remove command to remove subscriptions."
+        next_charge = count_next_charge(sub.last_charge, sub.period)
+        days_left = (next_charge - today).days
+        response += f"- <b>{sub.name}</b> ({sub.amount} / {sub.period}): {next_charge.strftime('%d.%m.%Y')} ({days_left} {'days' if days_left > 1 else 'day'} left)\n"
+    response += "\nType /remove to remove subscriptions."
     await message.reply(response, parse_mode="HTML")
 
 
@@ -208,13 +206,13 @@ async def inline_keyboard_handler(query: types.CallbackQuery):
                 return
             else:
                 logger.warning(
-                    f"Invalid callback query (sub_index >= subs count): {data}"
+                    f"Invalid callback query (sub_index >= subs count): {data}."
                 )
         case _:
-            logger.warning(f"Invalid callback query (unknown command): {data}")
-    await query.answer("Oops, something went wrong. Try again later")
+            logger.warning(f"Invalid callback query (unknown command): {data}.")
+    await query.answer("Oops, something went wrong. Try again later.")
 
 
 dp.middleware.setup(DatabaseMiddleware())
-logger.info("Bot has been started")
+logger.info("Bot is running.")
 executor.start_polling(dp, skip_updates=True)

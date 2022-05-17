@@ -1,8 +1,7 @@
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.types import Message
 from loguru import logger
-
-from bot.models import User
+from srblib.db.models import User
 
 
 class DatabaseMiddleware(BaseMiddleware):
@@ -14,5 +13,5 @@ class DatabaseMiddleware(BaseMiddleware):
         if not await user.find_one():
             await user.create()
             logger.info(
-                f"Registered a new user - @{message.from_user.username} ({message.from_user.id})"
+                f"Registered a new user - @{message.from_user.username} ({message.from_user.id})."
             )

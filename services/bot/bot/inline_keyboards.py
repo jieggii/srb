@@ -2,8 +2,7 @@ from typing import List
 
 import ujson
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-
-from bot.models import Sub
+from srblib.db.models import Sub
 
 
 def generate_remove_sub_inline_keyboard(

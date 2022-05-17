@@ -1,2 +1,4 @@
-# Subscriptions Reminder Bot
-(WIP)
+# Subscriptions reminder telegram bot
+## Dependencies
+* pdm
+* docker

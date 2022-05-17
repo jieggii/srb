@@ -1,0 +1,28 @@
+[project]
+name = "bot"
+version = ""
+description = ""
+authors = [
+    {name = "jieggii", email = "jieggii.contact@gmail.com"},
+]
+dependencies = [
+    "loguru>=0.6.0",
+    "aiogram>=2.20",
+    "-e file:///home/jieggii/code/proj/subscriptions-reminder-bot/srblib#egg=srblib",
+    "ujson>=5.2.0"]
+requires-python = ">=3.10"
+license = {text = "MIT"}
+[project.optional-dependencies]
+
+[tool]
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+dev = [
+    "black>=22.3.0",
+    "isort>=5.10.1",
+    "python-dotenv[cli]>=0.20.0",
+]
+
+[build-system]
+requires = ["pdm-pep517>=0.12.0"]
+build-backend = "pdm.pep517.api"
