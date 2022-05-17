@@ -3,5 +3,4 @@ Dockerfile
 __pypackages__
 .pdm.toml
 pdm.lock
-Makefile
 pyproject.toml

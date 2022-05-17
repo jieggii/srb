@@ -5,3 +5,5 @@ requirements.txt
 pdm.lock
 .pdm.toml
 .env
+*.whl
+services/mongo/data

@@ -1,1 +1,21 @@
 services:
+  bot:
+    image: srb-bot
+    container_name: srb-bot
+    env_file:
+      - .env
+
+  daemon:
+    image: srb-daemon
+    container_name: srb-daemon
+    env_file:
+      - .env
+
+  mongo:
+    image: mongo
+    container_name: srb-mongo
+    ports:
+      - 2717:27017
+    volumes:
+      - ./services/mongo/data:/data/db
+
