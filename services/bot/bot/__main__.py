@@ -130,9 +130,7 @@ async def state_new_sub_last_charge(message: types.Message, state: FSMContext):
         else:
             user.subs = [sub]
         await user.save()
-        logger.info(
-            f"Created a new sub for {user}: {sub}."
-        )
+        logger.info(f"Created a new sub for {user}: {sub}.")
         next_charge = count_next_charge(last_charge, data["period"])
         await message.reply(
             f"Done! Added a new subscription: <b>{data['name']}</b> ({data['amount']} / {data['period']}). "

@@ -1,6 +1,4 @@
-fmt:
-	pdm run isort bot/
-	pdm run black bot/
-
-run:
-	pdm run dotenv -f ../../.env run python -m bot
+.PHONY: build
+build:
+	pdm export --prod -f requirements -o requirements.txt
+	...

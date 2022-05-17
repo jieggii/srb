@@ -1,5 +1,5 @@
 [project]
-name = "bot"
+name = ""
 version = ""
 description = ""
 authors = [
@@ -8,7 +8,6 @@ authors = [
 dependencies = [
     "loguru>=0.6.0",
     "aiogram>=2.20",
-    "-e file:///home/jieggii/code/proj/subscriptions-reminder-bot/srblib#egg=srblib",
     "ujson>=5.2.0"]
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -18,10 +17,15 @@ license = {text = "MIT"}
 [tool.pdm]
 [tool.pdm.dev-dependencies]
 dev = [
+    "-e file:///home/jieggii/code/proj/subscriptions-reminder-bot/srblib#egg=srblib",
     "black>=22.3.0",
     "isort>=5.10.1",
-    "python-dotenv[cli]>=0.20.0",
 ]
+
+[tool.pdm.scripts]
+start.cmd = "python -m bot"
+start.env_file = "../../.env"
+fmt.shell = "isort bot/; black bot/"
 
 [build-system]
 requires = ["pdm-pep517>=0.12.0"]
