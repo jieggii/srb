@@ -1,7 +1,9 @@
 # Subscriptions reminder telegram bot
+It will remind you about your paid subscriptions so that you don't forget to pay or cancel them on time.
+
 ## Dependencies
 * [pdm](https://github.com/pdm-project/pdm)
-* [docker(https://github.com/docker/cli)]
+* [docker](https://github.com/docker/cli)
 * [docker-compose](https://github.com/docker/compose)
 
 ## Running
