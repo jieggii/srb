@@ -1,6 +1,7 @@
 .idea/
 __pycache__/
 __pypackages__/
+requirements.txt
 pdm.lock
 .pdm.toml
 .env
