@@ -41,4 +41,5 @@ class User(Document):
         name = "users"
 
     def __str__(self):
-        return f"User(user_id={self.user_id}, subs=[...]({len(self.subs)}))"
+        subs_count = 0 if self.subs is None else len(self.subs)
+        return f"User(user_id={self.user_id}, subs=[...]({subs_count}))"

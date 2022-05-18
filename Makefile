@@ -1,31 +1,42 @@
-.PHONY: build-srblib prepare-bot prepare-daemon prepare build-bot build-daemon build clean all
 bot := services/bot
 daemon  := services/daemon
 srblib-wheel := srblib/dist/srblib--py3-none-any.whl
 
 
-all: prepare build
+all: prepare-prod docker-build
 
 build-srblib:
 	pdm build --no-sdist --no-clean --project srblib
 
-prepare-bot:
+prepare-dev-srblib:
+	cd srblib && pdm install
+
+prepare-dev-bot:
+	cd $(bot) && pdm install
+	cd $(bot) && pdm add --dev -e ../../srblib
+
+prepare-prod-bot:
 	cd $(bot) && pdm export --prod --format requirements --output requirements.txt
 	cp $(srblib-wheel) $(bot)
 
-prepare-daemon:
+prepare-dev-daemon:
+	cd $(daemon) && pdm install
+	cd $(daemon) && pdm add --dev -e ../../srblib
+
+prepare-prod-daemon:
 	cd $(daemon) && pdm export --prod --format requirements --output requirements.txt
 	cp $(srblib-wheel) $(daemon)
 
-prepare: build-srblib prepare-bot prepare-daemon
+prepare-prod: build-srblib prepare-prod-bot prepare-prod-daemon
+prepare-dev: prepare-dev-srblib prepare-dev-bot prepare-dev-daemon
 
-build-bot:
+docker-build-bot:
 	docker build --tag srb-bot $(bot)
 
-build-daemon:
+docker-build-daemon:
 	docker build --tag srb-daemon $(daemon)
 
-build: build-bot build-daemon
+docker-build: docker-build-bot docker-build-daemon
 
 clean:
 	rm -rf srblib/__pypackages__/

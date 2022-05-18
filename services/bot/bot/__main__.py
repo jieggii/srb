@@ -124,7 +124,7 @@ async def state_new_sub_last_charge(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data["last_charge"] = last_charge
         sub = Sub(**data)
-        user = await User(user_id=message.from_user.id).find_one()
+        user = await User.find_one(User.user_id == message.from_user.id)
         if user.subs:
             user.subs.append(sub)
         else:
@@ -144,7 +144,7 @@ async def state_new_sub_last_charge(message: types.Message, state: FSMContext):
 
 @dp.message_handler(commands="all")
 async def handle_all(message: types.Message):
-    user = await User(user_id=message.from_user.id).find_one()
+    user = await User.find_one(User.user_id == message.from_user.id)
     if not user.subs:
         await message.reply(cliche.YOU_DO_NOT_HAVE_ANY_SUBS)
         return
@@ -160,7 +160,7 @@ async def handle_all(message: types.Message):
 
 @dp.message_handler(commands="remove")
 async def handle_remove(message: types.Message):
-    user = await User(user_id=message.from_user.id).find_one()
+    user = await User.find_one(User.user_id == message.from_user.id)
     if not user.subs:
         await message.reply(cliche.YOU_DO_NOT_HAVE_ANY_SUBS)
         return
@@ -180,7 +180,7 @@ async def inline_keyboard_handler(query: types.CallbackQuery):
     match command:
         case "remove_sub":
             i = data["sub_index"]
-            user = await User(user_id=query.from_user.id).find_one()
+            user = await User.find_one(User.user_id == query.from_user.id)
             if i < len(user.subs):
                 sub = user.subs.pop(i)
                 await user.save()
