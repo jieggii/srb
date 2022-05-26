@@ -4,7 +4,13 @@ from betterconf.caster import to_int
 
 
 class Config(BaseConfig):
-    TOKEN = field()
+    class Bot(BaseConfig):
+        _prefix_ = "BOT"
+        TOKEN = field()
+
+    class Daemon(BaseConfig):
+        _prefix_ = "DAEMON"
+        PERIOD = field(caster=to_int)
 
     class Mongo(BaseConfig):
         _prefix_ = "MONGO"

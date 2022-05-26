@@ -2,6 +2,7 @@ services:
   bot:
     image: srb-bot
     container_name: srb-bot
+    build: ./services/bot
     env_file:
       - .env
     depends_on:
@@ -10,6 +11,7 @@ services:
   daemon:
     image: srb-daemon
     container_name: srb-daemon
+    build: ./services/daemon
     env_file:
       - .env
     depends_on:
@@ -18,8 +20,9 @@ services:
   mongo:
     image: mongo
     container_name: srb-mongo
-    # ports:
-    #  - 2717:27017
+    command:
+      - '--logpath'
+      - '/dev/null'
     volumes:
       - ./services/mongo/data:/data/db
 

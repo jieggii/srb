@@ -1,9 +1,7 @@
 .idea/
 __pycache__/
-__pypackages__/
+dist/
 requirements.txt
-pdm.lock
-.pdm.toml
+poetry.lock
 .env
-*.whl
 services/mongo/data

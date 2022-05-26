@@ -1,51 +1,26 @@
-bot := services/bot
-daemon  := services/daemon
-srblib-wheel := srblib/dist/srblib--py3-none-any.whl
+bot := ./services/bot
+daemon := ./services/daemon
+srblib := ./srblib
+srblib-wheel := srblib-0.1.0-py3-none-any.whl
 
+.PHONY: prepare clean build run
 
-all: prepare-prod docker-build
+prepare:  # prepare dependencies before building docker containers
+	cd $(srblib) && poetry build --format wheel
+	cp -r $(srblib)/dist/$(srblib-wheel) $(bot)/
+	cp -r $(srblib)/dist/$(srblib-wheel) $(daemon)/
 
-build-srblib:
-	pdm build --no-sdist --no-clean --project srblib
+	cd $(bot) && poetry export -o requirements.txt && sed -i '/srblib/d' requirements.txt
+	cd $(daemon) && poetry export -o requirements.txt && sed -i '/srblib/d' requirements.txt
 
-prepare-dev-srblib:
-	cd srblib && pdm install
+clean:  # clean everything that was created by `prepare` target
+	rm -rf $(srblib)/dist/
+	rm -f $(bot)/$(srblib-wheel) $(daemon)/$(srblib-wheel)
+	rm -f $(bot)/requirements.txt $(daemon)/requirements.txt
 
-prepare-dev-bot:
-	cd $(bot) && pdm install
-	cd $(bot) && pdm add --dev -e ../../srblib
+build: prepare  # build docker containers and clean garbage
+	docker compose build
+	make clean
 
-prepare-prod-bot:
-	cd $(bot) && pdm export --prod --format requirements --output requirements.txt
-	cp $(srblib-wheel) $(bot)
-
-prepare-dev-daemon:
-	cd $(daemon) && pdm install
-	cd $(daemon) && pdm add --dev -e ../../srblib
-
-prepare-prod-daemon:
-	cd $(daemon) && pdm export --prod --format requirements --output requirements.txt
-	cp $(srblib-wheel) $(daemon)
-
-prepare-prod: build-srblib prepare-prod-bot prepare-prod-daemon
-prepare-dev: prepare-dev-srblib prepare-dev-bot prepare-dev-daemon
-
-docker-build-bot:
-	docker build --tag srb-bot $(bot)
-
-docker-build-daemon:
-	docker build --tag srb-daemon $(daemon)
-
-docker-build: docker-build-bot docker-build-daemon
-
-clean:
-	rm -rf srblib/__pypackages__/
-	rm -rf srblib/dist/
-
-	rm -rf $(bot)/__pypackages__/
-	rm -rf $(bot)/requirements.txt
-	rm -rf $(bot)/srblib--py3-none-any.whl
-
-	rm -rf $(daemon)/__pypackages__/
-	rm -rf $(daemon)/requirements.txt
-	rm -rf $(daemon)/srblib--py3-none-any.whl
+run: build
+	docker compose up -d

@@ -10,6 +10,10 @@ from srblib.db import init_db
 from srblib.db.models import Period, Sub, User
 
 
+def date_to_str(date: datetime):
+    return date.strftime("%d.%m.%Y")
+
+
 async def send_notification(user: User, sub: Sub, notification: str) -> None:
     text = f"<b>{sub.name}</b> ({sub.amount} / {sub.period}): {notification}."
     async with aiohttp.ClientSession() as session:
@@ -34,8 +38,12 @@ async def daemon() -> NoReturn:
                 for sub in user.subs:
                     today = datetime.today()
                     next_charge = count_next_charge(sub.last_charge, sub.period)
-                    days_left = (next_charge - today).days
-                    notified_today = (sub.last_notification - today) == 0 if sub.last_notification else None
+                    days_left = (next_charge - today).days + 1
+
+                    if sub.last_notification:
+                        notified_today = (sub.last_notification - today).days <= 0
+                    else:
+                        notified_today = False
 
                     if days_left < 0:
                         logger.warning(
@@ -48,32 +56,35 @@ async def daemon() -> NoReturn:
                         if days_left == 0:
                             sub.last_charge = next_charge
                             sub.last_notification = today
+                            await user.save()
                             await send_notification(
                                 user,
                                 sub,
-                                f"will be charged today. Next charge: <b>{next_charge}</b>.",
+                                f"will be charged today. Next charge: <b>{date_to_str(next_charge)}</b>",
                             )
 
                         elif days_left == 1:
                             sub.last_notification = today
+                            await user.save()
                             await send_notification(
-                                user, sub, f"will be charged tomorrow."
+                                user, sub, f"will be charged tomorrow ({date_to_str(next_charge)})"
                             )
 
                         elif days_left == 3:
                             sub.last_notification = today
+                            await user.save()
                             await send_notification(
-                                user, sub, f"will be charged <b>in three days</b>."
+                                user, sub, f"will be charged <b>in three days</b> ({date_to_str(next_charge)})"
                             )
 
                         elif days_left == 7 and sub.period != Period.WEEK:
                             sub.last_notification = today
+                            await user.save()
                             await send_notification(
-                                user, sub, f"will be charged <b>in a week</b>."
+                                user, sub, f"will be charged <b>in a week</b> ({date_to_str(next_charge)})"
                             )
-                        await user.save()
 
-        await asyncio.sleep(60*5)
+        await asyncio.sleep(config.Daemon.PERIOD)
 
 
 loop = asyncio.new_event_loop()

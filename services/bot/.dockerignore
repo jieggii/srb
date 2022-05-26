@@ -1,6 +1,3 @@
-.dockerignore
 Dockerfile
-.pdm.toml
-pdm.lock
+.dockerignore
 pyproject.toml
-__pypackages__

@@ -1,32 +1,24 @@
-[project]
-name = ""
-version = ""
+[tool.poetry]
+name = "bot"
+version = "0.1.0"
 description = ""
-authors = [
-    {name = "jieggii", email = "jieggii.contact@gmail.com"},
-]
-dependencies = [
-    "loguru>=0.6.0",
-    "aiogram>=2.20",
-    "ujson>=5.2.0"]
-requires-python = ">=3.10"
-license = {text = "MIT"}
-[project.optional-dependencies]
+authors = []
 
-[tool]
-[tool.pdm]
-[tool.pdm.dev-dependencies]
-dev = [
-    "-e file:///home/jieggii/code/proj/subscriptions-reminder-bot/srblib#egg=srblib",
-    "black>=22.3.0",
-    "isort>=5.10.1",
-]
+[tool.poetry.dependencies]
+python = "^3.10"
+aiogram = "^2.20"
+ujson = "^5.3.0"
+loguru = "^0.6.0"
+srblib = {path = "../../srblib", develop = true}
 
-[tool.pdm.scripts]
-start.cmd = "python -m bot"
-start.env_file = "../../.env"
-fmt.shell = "isort bot/; black bot/"
+[tool.poetry.dev-dependencies]
+isort = "^5.10.1"
+black = "^22.3.0"
+flake8 = "^4.0.1"
+
+[tool.poetry-exec-plugin.commands]
+fmt = "poetry run isort bot/; poetry run black bot/"
 
 [build-system]
-requires = ["pdm-pep517>=0.12.0"]
-build-backend = "pdm.pep517.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

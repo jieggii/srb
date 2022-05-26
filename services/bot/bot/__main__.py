@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.ERROR)
 loop = asyncio.new_event_loop()
 init_db(loop)
 
-bot = Bot(token=config.TOKEN, loop=loop)
+bot = Bot(token=config.Bot.TOKEN, loop=loop)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
 
