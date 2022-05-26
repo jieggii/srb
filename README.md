@@ -1,5 +1,6 @@
 # srb - subscriptions reminder (telegram) bot
 (Work is still in progress)
+
 It will remind you about your paid subscriptions so that you don't forget to pay or cancel them on time.
 
 ## Dependencies
