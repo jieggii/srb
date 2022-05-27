@@ -17,7 +17,7 @@ It will remind you about your paid subscriptions so that you don't forget to pay
 
 ## Architecture
 There are two services: the **bot** (at `./services/bot`) - Telegram bot and the **daemon** (at `./services/daemon`) - notification daemon.
-They both use the same local python package - **srblib** (at ./srblib/). To install **srblib** into docker container
+They both use the same local python package - **srblib** (at `./srblib/`). To install **srblib** into docker container
 we need some extra tricky steps which will be run by `make` command, that's why we need it. I also think that poetry installation 
 (a package manager) into docker container is overhead, that's why we export dependencies into `requirements.txt` and install them
 in containers via `pip install -r requirements.txt`. 
