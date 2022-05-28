@@ -1,7 +1,6 @@
 .idea/
 __pycache__/
 dist/
-requirements.txt
 poetry.lock
 .env
 services/mongo/data
