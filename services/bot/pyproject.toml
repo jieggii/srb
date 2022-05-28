@@ -12,12 +12,6 @@ loguru = "^0.6.0"
 srblib = {path = "../../srblib", develop = true}
 
 [tool.poetry.dev-dependencies]
-isort = "^5.10.1"
-black = "^22.3.0"
-flake8 = "^4.0.1"
-
-[tool.poetry-exec-plugin.commands]
-fmt = "poetry run isort bot/; poetry run black bot/"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

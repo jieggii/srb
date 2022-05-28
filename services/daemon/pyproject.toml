@@ -12,9 +12,6 @@ srblib = {path = "../../srblib", develop = true}
 
 [tool.poetry.dev-dependencies]
 
-[tool.poetry-exec-plugin.commands]
-fmt = "poetry run isort bot/; poetry run black bot/"
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

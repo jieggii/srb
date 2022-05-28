@@ -1,4 +1,9 @@
 services:
+  srblib:
+    image: srb-srblib
+    container_name: srb-srblib
+    build: ./srblib
+
   bot:
     image: srb-bot
     container_name: srb-bot
@@ -6,6 +11,7 @@ services:
     env_file:
       - .env
     depends_on:
+      - srblib
       - mongo
 
   daemon:
@@ -15,6 +21,7 @@ services:
     env_file:
       - .env
     depends_on:
+      - srblib
       - mongo
 
   mongo:
